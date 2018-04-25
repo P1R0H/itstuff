@@ -7,7 +7,7 @@ following python3 modules requied:
 
 ## Usage:
     set username, password and translation
-    language** in proper variables inside this file
+    language** in proper variables inside hctb.py file
 
     % python3 hctb.py
 
