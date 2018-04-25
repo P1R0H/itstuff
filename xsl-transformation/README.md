@@ -1,2 +1,3 @@
-#XSL Transfotmation
-Simple XSL Transformation from html representation of data in recipes.xml file
+#XSL Transformation
+
+Transformation from html representation of data in recipes.xml file
