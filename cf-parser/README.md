@@ -1,5 +1,5 @@
 # Config file parser
-Simple config file parser module. Parses valid* config files into the config structure defined in config.hpp file.
+Simple config file parser module. Parses valid config files into the config structure defined in config.hpp file.
 
 valid config example:
 ```

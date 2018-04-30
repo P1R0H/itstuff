@@ -21,6 +21,7 @@ $ python3 generator.py example_input.csv (optional_output.xml)
 import csv
 import os
 import sys
+from lxml import etree
 
 BUFFER_SIZE = 8388608
 
@@ -41,7 +42,7 @@ if len(sys.argv) == 3:
 if os.path.isfile(output_path):
     overwrite = input("Output file already exists. Overwrite? [yes/no] ")
     while True:
-        if overwrite in  {'Yes', 'yes', 'Y', 'y'}:
+        if overwrite in {'Yes', 'yes', 'Y', 'y'}:
             break
         elif overwrite in {'No', 'no', 'N', 'n'}:
             print('File was not modified. To change output file name, run the script with proper argument.\n')
@@ -51,33 +52,28 @@ if os.path.isfile(output_path):
     
 # Opening files
 table_ = csv.reader(open(input_path, "r", encoding='utf-8'), delimiter=',')
-out_ = open(output_path, "w", encoding='utf-8')
+config_file = open("ctypes.conf", "r", encoding='utf-8')
+config_ = csv.reader(config_file, delimiter=',')
 
-# Header
-out_.write('<?xml version="1.0" encoding="utf-8"?>\n'
-           '<!DOCTYPE reflector SYSTEM "/etc/tve/reflector.dtd">\n'
-           '<reflector ring_size="1024">\n\n')
+root = etree.Element('reflector', ring_size="1024")
 
 for row in table_:
-    config_ = csv.reader(open("ctypes.conf", "r", encoding='utf-8'), delimiter=',')
     for conf_line in config_:
-        if row[3] == conf_line[0]:
+        if row[2] == conf_line[0]:
+            root.append(etree.Comment(' GLOBAL-'+row[1]+' '+conf_line[3]+' kbps '))
 
             # Sources
-            out_.write('<!-- GLOBAL-' + row[0] + ' ' + conf_line[3] + ' kbps -->\n'
-                       '<source id="source-' + row[1] + '-' + conf_line[1] +
-                       '" type="ts" synchronized_group="' + row[1] + '" >\n'
-                       '\t<udp url="udp://' + conf_line[2] + row[2] +
-                       ':1234" buffersize="' + str(BUFFER_SIZE) + '"/>\n</source>\n\n')
+            tmp = etree.SubElement(root, 'source', id=('source-' + row[3] + '-' + conf_line[1]))
+            tmp.set('type', 'ts')
+            tmp.set('synchronized_group', row[3])
+            etree.SubElement(tmp, 'udp', url='udp:://'+conf_line[2]+row[0]+':1234').set('buffersize', str(BUFFER_SIZE))
 
             # Sinks
-            out_.write('<sink id="sink-' + row[1] + '-' + conf_line[1] +
-                       '" source="source-' + row[1] + '-' + conf_line[1] + '" >\n'
-                       '\t<hls variant_id="' + row[1] + '" profile_equivalent_ctype="' +
-                       conf_line[1] + '"/>\n</sink>\n\n')
+            tmp = etree.SubElement(root, 'sink', id=('sink-' + row[3] + '-' + conf_line[1]))
+            tmp.set('source', 'source-'+row[3]+'-'+conf_line[1])
+            tmp.set('profile_equivalent_ctype', conf_line[1])
+            etree.SubElement(tmp, 'hls', variant_id=row[3]).set('profile_equivalent', conf_line[1])
 
-# Reflector closure
-out_.write('</reflector>\n\n')
-
-print('SUCCESS\n')
-
+    config_file.seek(0)
+tree = etree.ElementTree(root)
+tree.write(output_path)
