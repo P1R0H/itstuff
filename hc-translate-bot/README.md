@@ -1,9 +1,9 @@
 # Hosting Controller Translation Bot (HCTB) v0.1
 @author Andrej Dravecky
 following python3 modules required:
-    Splinter
-    BeautifulSoup
-    Googletrans*
+Splinter
+BeautifulSoup
+Googletrans*
 
 ## Usage:
     set username, password and translation
